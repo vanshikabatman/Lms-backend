@@ -23,7 +23,14 @@ router.post('/', authenticate, authorizeRole(['admin', 'instructor']), async (re
     res.status(400).json({ message: 'Failed to create course', error: err.message });
   }
 });
-
+router.get('/all', async (req, res) => {
+  try {
+    const courses = await Course.find();
+    res.status(200).json(courses);
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+});
 // Get all courses (Available for Admin, Instructor, or Student with filters)
 router.get('/', authenticate, async (req, res) => {
   try {
@@ -78,6 +85,38 @@ router.delete('/:courseId', authenticate, authorizeRole(['admin', 'instructor'])
     res.status(200).json({ message: 'Course deleted successfully' });
   } catch (err) {
     res.status(400).json({ message: 'Failed to delete course', error: err.message });
+  }
+});
+router.post('/purchase', authenticate, async (req, res) => {
+  const { courseId } = req.body;
+  try {
+    const course = await Course.findById(courseId);
+    if (!course) return res.status(404).json({ message: 'Course not found.' });
+
+    const user = await User.findById(req.user.id);
+
+    // Check if the user already purchased the course
+    if (user.purchasedCourses.includes(courseId)) {
+      return res.status(400).json({ message: 'Course already purchased.' });
+    }
+
+    user.purchasedCourses.push(courseId);
+    await user.save();
+
+    res.status(200).json({ message: 'Course purchased successfully.', course });
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+});
+//my courses
+router.get('/my-courses', authenticate, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).populate('purchasedCourses');
+    if (!user) return res.status(404).json({ message: 'User not found.' });
+
+    res.status(200).json(user.purchasedCourses);
+  } catch (err) {
+    res.status(400).json({ message: err.message });
   }
 });
 

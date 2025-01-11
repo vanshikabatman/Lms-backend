@@ -10,6 +10,10 @@ const { authenticate, authorizeRole } = require('../middleware/auth');
 router.post('/register', async (req, res) => {
   const { username, email, password, role } = req.body;
   try {
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: 'Email already in use' });
+    }
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = new User({ username, email, password : hashedPassword, role });
     await user.save();
@@ -25,11 +29,14 @@ router.post('/login', async (req, res) => {
   try {
     const user = await User.findOne({ email }).populate('purchasedCourses');
     if (!user) {
+      console.log("balle balle");
       return res.status(400).json({ message: 'Invalid credentials' });
     }
-
-    const isMatch = await bcrypt.compare(password, user.password);
+    console.log(user.password);
+    const isMatch = bcrypt.compare(password, user.password);
+  
     if (!isMatch) {
+
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 

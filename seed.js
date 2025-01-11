@@ -14,17 +14,22 @@ mongoose.connect(process.env.MONGO_URI, {
   .catch(err => console.log(err));
 
 // Models
-const UserSchema = new mongoose.Schema({
+const userSchema = new mongoose.Schema({
     name: String,
     email: { type: String, unique: true },
     password: String,
     purchasedCourses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Course' }],
+    role: { type: String, enum: ['student', 'admin', 'instructor'], default: 'student' },
+    // UgPgCourse: { type: mongoose.Schema.Types.ObjectId, ref: 'UgPgCourse' },
+    college: String,
+    class: String,
+    state: String,
     tempAccessCode: {
       code: String,
       expiresAt: Date,
     },
-  });
-  const User = mongoose.model('User', UserSchema);
+});
+  const User = mongoose.model('User', userSchema);
   
   const CourseSchema = new mongoose.Schema({
     title: String,
@@ -44,7 +49,7 @@ const seedDatabase = async () => {
     const hashedPassword = await bcrypt.hash('password123', 10);
     const users = [
       { name: 'John Doe', email: 'john@example.com', password: hashedPassword },
-      { name: 'Jane Smith', email: 'jane@example.com', password: hashedPassword },
+      { name: 'Jane Smith', email: 'admin@demo.com', password: hashedPassword , role: "admin" },
     ];
     await User.insertMany(users);
 
