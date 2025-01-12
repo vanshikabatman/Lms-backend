@@ -8,9 +8,10 @@ const dotenv = require('dotenv');
 const crypto = require('crypto');
 const authRoutes = require('./routes/authRoutes');
 const courseRoutes = require('./routes/courseRoutes');
-const subscription = require('./routes/subscriptionRoutes');
+const planRoutes = require('./routes/planRoutes');
 const Transaction = require('./models/transactionModel');
 const Subscription = require('./models/subscriptionModel');
+const razor = require('./routes/razorPay');
 
 dotenv.config();
 
@@ -26,6 +27,7 @@ mongoose.connect(process.env.MONGO_URI, {
 }).then(() => console.log('MongoDB connected')).catch(err => console.log(err));
 app.use('/api/auth', authRoutes);
 app.use('/api/courses', courseRoutes);
-app.use('/api/subscription',subscription )
+app.use('/api/plan',planRoutes );
+app.use('/api/razorpay', razor);
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buy Subscription</title>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+</head>
+<body>
+    <button id="buySubscription">Buy Subscription</button>
+
+    <script>
+        document.getElementById('buySubscription').addEventListener('click', async () => {
+            const planId = '6783837ce8d016d793fdfb05'; // Replace with the actual plan ID
+            const jwtToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NzgzOGM3YmFkNzRlMTY5MGNkYjU4OGUiLCJpYXQiOjE3MzY2NzQ0NjZ9.mvqLXJ-kpWvQd4643pF-orbYJQTanQEsVXV3luMVi6w'; // Replace with the user's JWT token
+
+            try {
+                // Step 1: Call backend API to create an order
+                const orderData = await fetch('http://localhost:3000/api/razorpay/buyPlan', {
+                    method: 'POST',
+                    headers: {
+                        Authorization: `Bearer ${jwtToken}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ planId }),
+                }).then(res => res.json());
+
+                if (!orderData || !orderData.orderId) {
+                    throw new Error('Failed to create order');
+                }
+
+                // Step 2: Initialize Razorpay
+                const razorpay = new Razorpay({
+                    key: 'rzp_test_Wm90I5h1isnZZk', // Replace with your Razorpay Key ID
+                    amount: orderData.amount * 100, // Amount in paise
+                    currency: orderData.currency,
+                    name: 'LMS Platform',
+                    description: 'Subscription Purchase',
+                    order_id: orderData.orderId,
+                    handler: async (response) => {
+                        // Step 3: Verify payment on the server
+                        const verifyResponse = await fetch('http://localhost:3000/api/razorpay/verify', {
+                            method: 'POST',
+                            headers: {
+                                Authorization: `Bearer ${jwtToken}`,
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify(response),
+                        });
+
+                        if (verifyResponse.ok) {
+                            alert('Payment successful and verified!');
+                        } else {
+                            alert('Payment verification failed. Please contact support.');
+                        }
+                    },
+                    prefill: {
+                        name: 'User Name', // Replace with the user's name
+                        email: 'user@example.com', // Replace with the user's email
+                    },
+                    theme: { color: '#F37254' },
+                });
+
+                razorpay.open();
+            } catch (error) {
+                console.error('Error during payment process:', error);
+                alert('Something went wrong. Please try again.' , error);
+            }
+        });
+    </script>
+</body>
+</html>

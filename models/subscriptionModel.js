@@ -1,10 +1,26 @@
 const mongoose = require('mongoose');
 const SubscriptionSchema = new mongoose.Schema({
-    plan: { type: String, required: true },
-    duration: { type: Number, required: true }, // In months
-    price: { type: Number, required: true },
-    includedCourses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Course' }],
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }, // Reference to the user
+    plan: { type: mongoose.Schema.Types.ObjectId, ref: 'Plan', required: true }, // Reference to the subscription plan
+    startTime: { type: Date, required: true, default: Date.now }, // Subscription start time
+    endTime: { type: Date, required: true }, // Subscription end time
+    status: { 
+        type: String, 
+        enum: ['active', 'expired', 'cancelled'], 
+        default: 'active' 
+    }, // Subscription status
+    paymentId: { type: String }, // Reference to payment (if needed)
+    isAutoRenew: { type: Boolean, default: false }, // For auto-renewal functionality
+}, { timestamps: true });
+
+SubscriptionSchema.pre('save', function (next) {
+    // Automatically calculate endTime based on the plan's duration
+    if (!this.endTime && this.plan && this.startTime) {
+        const endDate = new Date(this.startTime);
+        endDate.setMonth(endDate.getMonth() + this.plan.duration);
+        this.endTime = endDate;
+    }
+    next();
 });
 
-const Subscription = mongoose.model('Subscription', SubscriptionSchema);
-module.exports = Subscription;
+module.exports = mongoose.model('Subscription', SubscriptionSchema);
