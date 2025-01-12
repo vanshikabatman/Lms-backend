@@ -4,6 +4,7 @@ const router = express.Router();
 const User = require('../models/user');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 const { authenticate, authorizeRole } = require('../middleware/auth');
 
 // Register route
@@ -48,10 +49,12 @@ router.post('/login', async (req, res) => {
     res.status(400).json({ message: 'Error logging in', error: err.message });
   }
 });
-router.post('/admin/generate-code', authenticate, authorizeRole(['admin']),async (req, res) => {
+router.post('/admin/generate-code' ,async (req, res) => {
     const { email } = req.body;
     try {
+    
       const user = await User.findOne({ email });
+      console.log(user);
       if (!user) return res.status(404).json({ message: 'User not found.' });
   
       const tempCode = crypto.randomBytes(4).toString('hex'); // Generate a 4-byte hex code
