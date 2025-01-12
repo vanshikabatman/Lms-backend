@@ -7,16 +7,25 @@ const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const { authenticate, authorizeRole } = require('../middleware/auth');
 
-// Register route
 router.post('/register', async (req, res) => {
   const { username, email, password, role } = req.body;
+ 
+if(!email||!password || username || role){
+    res.status(400).json({ message: 'All fields are required.' });
+  }  
   try {
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: 'Email already in use' });
     }
     const hashedPassword = await bcrypt.hash(password, 10);
-    const user = new User({ username, email, password : hashedPassword, role });
+    console.log(hashedPassword);
+    const user = new User({
+      name : username,
+      email : email,
+      password : hashedPassword,
+      role : role
+    });
     await user.save();
     res.status(201).json({ message: 'User created successfully' });
   } catch (err) {
@@ -34,7 +43,7 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
     console.log(user.password);
-    const isMatch = bcrypt.compare(password, user.password);
+    const isMatch =  bcrypt.compareSync(password, user.password);
   
     if (!isMatch) {
 

@@ -24,16 +24,16 @@ const userSchema = new mongoose.Schema({
   }, // Temporary access code functionality
 }, { timestamps: true });
 
-userSchema.pre('save', async function (next) {
-  if (this.isModified('password')) {
-    this.password = await bcrypt.hash(this.password, 10);
-  }
-  next();
-});
+// userSchema.pre('save', async function (next) {
+//   if (this.isModified('password')) {
+//     this.password = await bcrypt.hash(this.password, 10);
+//   }
+//   next();
+// });
 
-userSchema.methods.comparePassword = async function (password) {
-  return await bcrypt.compare(password, this.password);
-};
+// userSchema.methods.comparePassword = async function (password) {
+//   return await bcrypt.compare(password, this.password);
+// };
 
 const User = mongoose.model('User', userSchema);
 module.exports = User;
