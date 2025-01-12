@@ -71,14 +71,28 @@ router.post('/verify', authenticate, async (req, res) => {
         const order = await razorpay.orders.fetch(razorpay_order_id); 
         const userId = order.notes.userId;
         const planId = order.notes.planId;
-        console.log(req.user);
-        console.log(order);
+        const plan = await plans.findById(planId);
+        if (!plan) {
+            return res.status(404).json({ error: 'Plan not found' });
+        }
+        const subscription = new Subscription({
+            user: userId,
+            plan: planId,
+            startTime: new Date(),
+            status: 'active',
+            paymentId: razorpay_payment_id,
+        });
+      
+        await subscription.save();
+        await User.findByIdAndUpdate(userId, {
+            $push: { subscriptions: subscription._id },
+        });
         await Transaction.findOneAndUpdate(
             { orderId: order.id },
             { $set: { status: order.status} }
         );
 
-        await User.findByIdAndUpdate(userId, { subscription: planId });
+    
         res.status(200).json({ message: 'Payment verified and subscription updated successfully' });
     } catch (error) {
         console.error('Error verifying payment:', error);

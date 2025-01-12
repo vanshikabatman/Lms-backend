@@ -9,17 +9,13 @@ const { authenticate, authorizeRole } = require('../middleware/auth');
 
 router.post('/register', async (req, res) => {
   const { username, email, password, role } = req.body;
- 
-if(!email||!password || username || role){
-    res.status(400).json({ message: 'All fields are required.' });
-  }  
   try {
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: 'Email already in use' });
     }
     const hashedPassword = await bcrypt.hash(password, 10);
-    console.log(hashedPassword);
+ 
     const user = new User({
       name : username,
       email : email,
