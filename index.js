@@ -11,6 +11,8 @@ const courseRoutes = require('./routes/courseRoutes');
 const planRoutes = require('./routes/planRoutes');
 const Transaction = require('./models/transactionModel');
 const Subscription = require('./models/subscriptionModel');
+const lesson = require('./models/lessonModel');
+const submission = require('./models/submissionModel');
 const razor = require('./routes/razorPay');
 
 dotenv.config();
