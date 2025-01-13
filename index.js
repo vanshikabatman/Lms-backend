@@ -14,6 +14,7 @@ const Subscription = require('./models/subscriptionModel');
 const lesson = require('./models/leesonModel');
 const submission = require('./models/submissionModel');
 const razor = require('./routes/razorPay');
+const lessonRoute = require('./routes/lessonRoutes');
 
 dotenv.config();
 
@@ -34,5 +35,6 @@ app.use('/api/auth', authRoutes);
 app.use('/api/courses', courseRoutes);
 app.use('/api/plan',planRoutes );
 app.use('/api/razorpay', razor);
+app.use('/api/lessons', lessonRoute);
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

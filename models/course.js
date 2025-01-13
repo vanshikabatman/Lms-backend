@@ -20,18 +20,19 @@ const courseSchema = new mongoose.Schema({
   rating: { type: Number, default: 0 }, // Average rating
   status: { type: String, enum: ['active', 'inactive'], default: 'active' }, // Course status
   progressPercent: { type: Number, default: 0 }, // Progress of the course (if applicable)
-  reservedMeeting: { type: String }, // Reserved meeting details (optional)
-  reservedMeetingUserTimeZone: { type: String }, // User's timezone for meeting
-  startDate: { type: Date }, // Start date for the course
-  expireOn: { type: Date }, // Expiry date for the course
-  capacity: { type: Number }, // Maximum number of students allowed
+  lessonsCount : { type: Number, default:0 }, // Number of lessons in the course
+  // reservedMeeting: { type: String }, // Reserved meeting details (optional)
+  // reservedMeetingUserTimeZone: { type: String }, // User's timezone for meeting
+  // startDate: { type: Date }, // Start date for the course
+  // expireOn: { type: Date }, // Expiry date for the course
+  // capacity: { type: Number }, // Maximum number of students allowed
   badges: [{ type: String }], // Achievements or tags associated with the course
   translations: [{ 
     language: String, 
     title: String, 
     description: String 
   }], // Multilingual support
-  authHasBought: { type: Boolean, default: false }, // Flag for purchase status (context-specific)
+  // authHasBought: { type: Boolean, default: false }, // Flag for purchase status (context-specific)
   subscriptionIncluded: { type: Boolean, default: false }, // Flag if included in a subscription plan
   createdAt: { type: Date, default: Date.now }, // Creation timestamp
 }, { timestamps: true });

@@ -17,7 +17,7 @@ const LessonSchema = new mongoose.Schema({
     ],
     duration: { type: Number }, // For videos or time-limited tests
     preview: { type: String }, // Preview content if applicable
-    course: { type: mongoose.Schema.Types.ObjectId, ref: 'Course', required: true },
+    courseId: { type: mongoose.Schema.Types.ObjectId, ref: 'Course', required: true },
   }, { timestamps: true });
 
   module.exports = mongoose.model('Lesson', LessonSchema);
