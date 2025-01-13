@@ -23,6 +23,51 @@ router.post('/', authenticate, authorizeRole(['admin', 'instructor']), async (re
     res.status(400).json({ message: 'Failed to create course', error: err.message });
   }
 });
+
+//   try {
+//     const courseId = req.params.courseId;
+//     const userId = req.user ? req.user._id : null; // Check if user is authenticated
+
+//     // Fetch the course
+//     const course = await Course.findById(courseId)
+//       .populate('lessons', 'title preview content') // Fetch lesson fields dynamically
+//       .populate('instructor', 'name');
+
+//     if (!course || !course.isPublished) {
+//       return res.status(404).json({ message: 'Course not found or not published' });
+//     }
+
+//     // Default response for non-authenticated users
+//     let response = {
+//       title: course.title,
+//       description: course.description,
+//       price: course.price,
+//       instructor: course.instructor.name,
+//       lessons: course.lessons.map((lesson) => ({
+//         title: lesson.title,
+//         preview: lesson.preview || 'This content is locked.',
+//       })),
+//     };
+
+//     // If the user is authenticated, check purchase status
+//     if (userId) {
+//       const user = await User.findById(userId);
+
+//       if (user && user.purchasedCourses.includes(courseId)) {
+//         // Update response to include full lesson content
+//         response.lessons = course.lessons.map((lesson) => ({
+//           title: lesson.title,
+//           content: lesson.content,
+//         }));
+//       }
+//     }
+
+//     res.status(200).json(response);
+//   } catch (error) {
+//     res.status(500).json({ message: error.message });
+//   }
+// });
+
 router.get('/all', async (req, res) => {
   try {
     const courses = await Course.find();
