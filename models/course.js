@@ -20,7 +20,7 @@ const courseSchema = new mongoose.Schema({
   rating: { type: Number, default: 0 }, // Average rating
   status: { type: String, enum: ['active', 'inactive'], default: 'active' }, // Course status
   progressPercent: { type: Number, default: 0 }, // Progress of the course (if applicable)
-  lessons: [{ type: Schema.Types.ObjectId, ref: 'Lesson' }],
+  lessons: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Lesson' }],
   lessonsCount : { type: Number, default:0 }, // Number of lessons in the course
   // reservedMeeting: { type: String }, // Reserved meeting details (optional)
   // reservedMeetingUserTimeZone: { type: String }, // User's timezone for meeting

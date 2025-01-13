@@ -6,12 +6,13 @@ const bcrypt = require('bcryptjs');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const crypto = require('crypto');
+const lesson = require('./models/leesonModel');
 const authRoutes = require('./routes/authRoutes');
 const courseRoutes = require('./routes/courseRoutes');
 const planRoutes = require('./routes/planRoutes');
 const Transaction = require('./models/transactionModel');
 const Subscription = require('./models/subscriptionModel');
-const lesson = require('./models/leesonModel');
+
 const submission = require('./models/submissionModel');
 const razor = require('./routes/razorPay');
 const lessonRoute = require('./routes/lessonRoutes');
