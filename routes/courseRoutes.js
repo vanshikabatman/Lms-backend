@@ -70,21 +70,21 @@ router.post('/', authenticate, authorizeRole(['admin', 'instructor']), async (re
 
 router.get('/all', async (req, res) => {
   try {
-    const courses = await Course.find();
+    const courses = await Course.find().populate({path: 'teacher',select :'name email' }).exec();
     res.status(200).json(courses);
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
 });
 // Get all courses (Available for Admin, Instructor, or Student with filters)
-router.get('/', authenticate, async (req, res) => {
+router.get('/', async (req, res) => {
   try {
-    let query = {};
-    if (req.user.role === 'student') {
-      query = { status: 'active' };
-    }
+    // let query = {};
+    // if (req.user.role === 'student') {
+    //   query = { status: 'active' };
+    // }
 
-    const courses = await Course.find(query).populate('teacher').exec();
+    const courses = await Course.find().populate('teacher').exec();
     res.status(200).json(courses);
   } catch (err) {
     res.status(400).json({ message: 'Failed to fetch courses', error: err.message });
