@@ -1,4 +1,6 @@
-const LessonSchema = new Schema({
+const mongoose = require('mongoose');
+
+const LessonSchema = new mongoose.Schema({
     title: { type: String, required: true },
     type: { 
       type: String, 
@@ -15,7 +17,7 @@ const LessonSchema = new Schema({
     ],
     duration: { type: Number }, // For videos or time-limited tests
     preview: { type: String }, // Preview content if applicable
-    course: { type: Schema.Types.ObjectId, ref: 'Course', required: true },
+    course: { type: mongoose.Schema.Types.ObjectId, ref: 'Course', required: true },
   }, { timestamps: true });
 
   module.exports = mongoose.model('Lesson', LessonSchema);
