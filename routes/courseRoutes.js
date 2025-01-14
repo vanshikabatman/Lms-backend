@@ -91,6 +91,7 @@ try{
       rating : course.rating,
       studentsCount : course.studentsCount,
       lessonsCount : course.lessonsCount,
+      createdAt : course.createdAt,
 
 
 
