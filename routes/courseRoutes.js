@@ -76,26 +76,44 @@ try{
       return res.status(404).json({ message: 'Course not found or not published' });
     }
     let response = {
+     
       title: course.title,
       description: course.description,
       price: course.price,  
       teacher: course.teacher ? course.teacher.name : 'Unknown',
+      isPurchased: false,
+      preview: course.link ?? "Not available",
+      thumbnail: course.thumbnail,
+      type: course.type,
+      duration: course.duration,
+      category: course.category ?? "Course",
+      status: course.status,
+      rating : course.rating,
+      studentsCount : course.studentsCount,
+      lessonsCount : course.lessonsCount,
+
+
+
+      
       lessons: course.lessons.map((lesson) => ({
         title: lesson.title,
         preview: lesson.preview || 'This content is locked.',
       })),
+      
     };
 if (userId){
   const user = await User.findById(userId);
 
       if (user && user.purchasedCourses.includes(courseId)) {
         // Update response to include full lesson content
+        response.isPurchased = true;
         response.lessons = course.lessons.map((lesson) => ({
           title: lesson.title,
           content: lesson.content,
           type: lesson.type,
           duration: lesson.duration,
           questions: lesson.questions,
+         
         }));
       }
 }
@@ -103,8 +121,8 @@ if (userId){
     res.status(200).json(response); 
 }
 catch (err){
-  res.status(500).json({message : "Internal Server Error"})
   console.log(err);
+  res.status(500).json({message : "Internal Server Error"});
 }
 });
 
