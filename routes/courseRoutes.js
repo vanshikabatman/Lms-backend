@@ -76,7 +76,7 @@ try{
       return res.status(404).json({ message: 'Course not found or not published' });
     }
     let response = {
-     
+     id : course._id,
       title: course.title,
       description: course.description,
       price: course.price,  
