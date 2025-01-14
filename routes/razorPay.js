@@ -136,4 +136,24 @@ router.post('/webhook', async (req, res) => {
         res.status(500).json({ error: 'Server error', details: error.message });
     }
 });
+
+router.get('/admin/transactions', authenticate, authorizeRole(['admin']), async (req, res) => {
+    try {
+      // Fetch all transactions from the database
+      const transactions = await Transaction.find().populate('userId planId').sort({ timestamp: -1 });
+  
+      if (!transactions.length) {
+        return res.status(404).json({ message: 'No transactions found.' });
+      }
+  
+      res.status(200).json({
+        message: 'Transaction history fetched successfully.',
+        transactions,
+      });
+    } catch (error) {
+      console.error('Error fetching transaction history:', error);
+      res.status(500).json({ error: 'Server error', details: error.message });
+    }
+  });
+  
 module.exports = router;
