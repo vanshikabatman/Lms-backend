@@ -2,71 +2,111 @@
 const express = require('express');
 const router = express.Router();
 const Course = require('../models/course');
+const User = require('../models/user');
 const { authenticate, authorizeRole } = require('../middleware/auth');
 
 // Create a course (Admin or Instructor only)
-router.post('/', authenticate, authorizeRole(['admin', 'instructor']), async (req, res) => {
+router.post('/create-course', async (req, res) => {
   try {
     const {
-      title, description, price, isFree, isPaid, priceWithDiscount, discountPercent,
-      image, thumbnail, type, link, duration, category, teacher, capacity
+      title,
+      description,
+      price,
+      isFree,
+      priceWithDiscount,
+      discountPercent,
+      image,
+      thumbnail,
+      type,
+      link,
+      duration,
+      category,
+      teacher,
+      lessons,
+      badges,
+      translations,
+      subscriptionIncluded,
     } = req.body;
 
-    const newCourse = new Course({
-      title, description, price, isFree, isPaid, priceWithDiscount, discountPercent,
-      image, thumbnail, type, link, duration, category, teacher, capacity
+    // Validate required fields
+    if (!title || !description || !type || !duration || !image || !thumbnail || !teacher) {
+      return res.status(400).json({ error: 'Required fields are missing.' });
+    }
+
+    // Create a new course
+    const course = new Course({
+      title,
+      description,
+      price: isFree ? 0 : price, // Ensure price is 0 for free courses
+      isFree,
+      priceWithDiscount,
+      discountPercent,
+      image,
+      thumbnail,
+      type,
+      link,
+      duration,
+      category,
+      teacher,
+      lessons,
+      badges,
+      translations,
+      subscriptionIncluded,
     });
 
-    await newCourse.save();
-    res.status(201).json(newCourse);
-  } catch (err) {
-    res.status(400).json({ message: 'Failed to create course', error: err.message });
+    // Save the course to the database
+    await course.save();
+
+    res.status(201).json({
+      message: 'Course created successfully.',
+      course,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Something went wrong.' });
   }
 });
 
-//   try {
-//     const courseId = req.params.courseId;
-//     const userId = req.user ? req.user._id : null; // Check if user is authenticated
+router.get("/one/:courseId" ,authenticate,  async (req,res)=>{
+try{
+  const userId = req.user._id;
+  const courseId = req.params.courseId;  
+  const course = await Course.findById(courseId).populate('lessons', 'title preview content').populate('teacher', 'name');
+    if (!course ) {
+      return res.status(404).json({ message: 'Course not found or not published' });
+    }
+    let response = {
+      title: course.title,
+      description: course.description,
+      price: course.price,  
+      teacher: course.teacher ? course.teacher.name : 'Unknown',
+      lessons: course.lessons.map((lesson) => ({
+        title: lesson.title,
+        preview: lesson.preview || 'This content is locked.',
+      })),
+    };
+if (userId){
+  const user = await User.findById(userId);
 
-//     // Fetch the course
-//     const course = await Course.findById(courseId)
-//       .populate('lessons', 'title preview content') // Fetch lesson fields dynamically
-//       .populate('instructor', 'name');
+      if (user && user.purchasedCourses.includes(courseId)) {
+        // Update response to include full lesson content
+        response.lessons = course.lessons.map((lesson) => ({
+          title: lesson.title,
+          content: lesson.content,
+          type: lesson.type,
+          duration: lesson.duration,
+          questions: lesson.questions,
+        }));
+      }
+}
 
-//     if (!course || !course.isPublished) {
-//       return res.status(404).json({ message: 'Course not found or not published' });
-//     }
-
-//     // Default response for non-authenticated users
-//     let response = {
-//       title: course.title,
-//       description: course.description,
-//       price: course.price,
-//       instructor: course.instructor.name,
-//       lessons: course.lessons.map((lesson) => ({
-//         title: lesson.title,
-//         preview: lesson.preview || 'This content is locked.',
-//       })),
-//     };
-
-//     // If the user is authenticated, check purchase status
-//     if (userId) {
-//       const user = await User.findById(userId);
-
-//       if (user && user.purchasedCourses.includes(courseId)) {
-//         // Update response to include full lesson content
-//         response.lessons = course.lessons.map((lesson) => ({
-//           title: lesson.title,
-//           content: lesson.content,
-//         }));
-//       }
-//     }
-
-//     res.status(200).json(response);
-//   } catch (error) {
-//     res.status(500).json({ message: error.message });
-//   }
-// });
+    res.status(200).json(response); 
+}
+catch (err){
+  res.status(500).json({message : "Internal Server Error"})
+  console.log(err);
+}
+});
 
 router.get('/all', async (req, res) => {
   try {
@@ -76,41 +116,75 @@ router.get('/all', async (req, res) => {
     res.status(400).json({ message: err.message });
   }
 });
-// Get all courses (Available for Admin, Instructor, or Student with filters)
-router.get('/', async (req, res) => {
-  try {
-    // let query = {};
-    // if (req.user.role === 'student') {
-    //   query = { status: 'active' };
-    // }
-
-    const courses = await Course.find().populate('teacher').exec();
-    res.status(200).json(courses);
-  } catch (err) {
-    res.status(400).json({ message: 'Failed to fetch courses', error: err.message });
-  }
-});
 
 // Update a course (Admin or Instructor only)
-router.put('/:courseId', authenticate, authorizeRole(['admin', 'instructor']), async (req, res) => {
-  try {
-    const { courseId } = req.params;
-    const course = await Course.findById(courseId);
+router.put(
+  '/:courseId',
+  authenticate,
+  authorizeRole(['admin', 'instructor']),
+  async (req, res) => {
+    try {
+      const { courseId } = req.params;
+      const userId = req.user.id;
+      const userRole = req.user.role;
 
-    if (!course) {
-      return res.status(404).json({ message: 'Course not found' });
+      // Check if the course exists
+      const course = await Course.findById(courseId);
+      if (!course) {
+        return res.status(404).json({ message: 'Course not found' });
+      }
+
+      // Check if the user is authorized to update the course
+      const isOwner = course.teacher.toString() === userId;
+      const isAdmin = userRole === 'admin';
+      if (!isOwner && !isAdmin) {
+        return res.status(403).json({ message: 'You are not authorized to update this course' });
+      }
+
+      // Update the course
+      const allowedUpdates = [
+        'title',
+        'description',
+        'price',
+        'isFree',
+        'priceWithDiscount',
+        'discountPercent',
+        'image',
+        'thumbnail',
+        'type',
+        'link',
+        'duration',
+        'category',
+        'lessons',
+        'badges',
+        'translations',
+        'subscriptionIncluded',
+        'status',
+      ];
+
+      const updates = Object.keys(req.body);
+      const isValidUpdate = updates.every((key) => allowedUpdates.includes(key));
+      if (!isValidUpdate) {
+        return res.status(400).json({ message: 'Invalid fields in update request' });
+      }
+
+      updates.forEach((key) => {
+        course[key] = req.body[key];
+      });
+
+      await course.save();
+
+      res.status(200).json({
+        message: 'Course updated successfully',
+        course,
+      });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: 'Failed to update course', error: err.message });
     }
-
-    if (course.teacher.toString() !== req.user.id && req.user.role !== 'admin') {
-      return res.status(403).json({ message: 'You are not authorized to update this course' });
-    }
-
-    const updatedCourse = await Course.findByIdAndUpdate(courseId, req.body, { new: true });
-    res.status(200).json(updatedCourse);
-  } catch (err) {
-    res.status(400).json({ message: 'Failed to update course', error: err.message });
   }
-});
+);
+
 
 // Delete a course (Admin or Instructor only)
 router.delete('/:courseId', authenticate, authorizeRole(['admin', 'instructor']), async (req, res) => {

@@ -15,7 +15,7 @@ try{
     const newLesson = new Lesson({
         title , type , content , questions , duration , preview , courseId});
     await newLesson.save();
-    await Course.findOneAndUpdate({_id : courseId} , {$inc: {lessonsCount: 1}});
+    await Course.findOneAndUpdate({_id : courseId} , {$inc: {lessonsCount: 1}, $push: {lessons: newLesson._id}});
     
     res.status(201).json(newLesson);
 }
