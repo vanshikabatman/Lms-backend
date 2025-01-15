@@ -92,6 +92,8 @@ try{
       studentsCount : course.studentsCount,
       lessonsCount : course.lessonsCount,
       createdAt : course.createdAt,
+      discountPercent: course.discountPercent,
+      
 
 
 

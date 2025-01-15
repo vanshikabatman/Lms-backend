@@ -3,6 +3,7 @@ const router = express.Router();
 const { authenticate, authorizeRole } = require('../middleware/auth');
 const Subscription = require('../models/subscriptionModel')
 const plans = require('../models/plan');
+const Course = require('../models/course');
 const Razorpay = require('razorpay');
 const Transaction = require("../models/transactionModel");
 const User = require("../models/user")
@@ -11,23 +12,42 @@ const razorpay = new Razorpay({
     key_secret: "oUAbzAdAHXFJp7nXQJ1p68YD",
 });
 
-router.post('/buyPlan', authenticate, authorizeRole(['student']), async (req, res) => {
-    const { planId } = req.body;
-
+router.post('/buy', authenticate, async (req, res) => {
+    const { Id , type  } = req.body;
+   
     try {
-        // Fetch the subscription plan
-        const plan = await plans.findById(planId);
-        if (!plan) return res.status(404).json({ error: 'Subscription plan not found' });
+        let item;
+        let itemIdField;
+        const user = await User.findById(req.user.id);
 
+        if(type === 'plan'){
+        item  = await plans.findById(Id);
+        if (!item) return res.status(404).json({ error: 'Subscription plan not found' });
+        itemIdField = 'planId';   
+    }
+        else if (type === 'course') {
+           item = await Course.findById(Id);
+            if (!item) return res.status(404).json({ error: 'Course not found' });
+           
+            if (user.purchasedCourses.includes(Id)) {
+                return res.status(400).json({ message: 'Course already purchased.' });
+            }
+            itemIdField = 'courseId';
+        }   else{
+            return res.status(400).json({ error: 'Invalid type provided. Must be either "plan" or "course".' });
+        }
         // Create a Razorpay order
-        const amountInPaise = plan.price * 100; // Razorpay uses paise
+        console.log(item.price);
+        const amountInPaise = Math.round(item.price * 100); // Razorpay uses paise
+        console.log(amountInPaise);
         const order = await razorpay.orders.create({
             amount: amountInPaise,
             currency: 'INR',
             receipt: `receipt_${Date.now()}`,
             notes: {
                 userId : req.user.id,
-                planId : planId
+                itemId: item.id,
+                type,
             }
         });
 
@@ -35,17 +55,13 @@ router.post('/buyPlan', authenticate, authorizeRole(['student']), async (req, re
         const transaction = new Transaction({
             orderId: order.id,
             userId: req.user.id,
-            planId,
-            amount: plan.price,
+            [itemIdField]: item.id,
+            amount: item.price,
             timestamp: new Date(),
         });
         await transaction.save();
 
         res.status(200).json({
-            message: 'Order created successfully',
-            orderId: order.id,
-            amount: plan.price,
-            currency: 'INR',
             order
         });
     } catch (error) {
@@ -67,38 +83,79 @@ router.post('/verify', authenticate, async (req, res) => {
             return res.status(400).json({ error: 'Invalid payment signature' });
         }
 
-        // Update the user's subscription
-        const order = await razorpay.orders.fetch(razorpay_order_id); 
-        const userId = order.notes.userId;
-        const planId = order.notes.planId;
-        const plan = await plans.findById(planId);
-        if (!plan) {
-            return res.status(404).json({ error: 'Plan not found' });
+        // Fetch order details from Razorpay
+        const order = await razorpay.orders.fetch(razorpay_order_id);
+        if (!order) {
+            return res.status(404).json({ error: 'Order not found' });
         }
-        const subscription = new Subscription({
-            user: userId,
-            plan: planId,
-            startTime: new Date(),
-            status: 'active',
-            paymentId: razorpay_payment_id,
-        });
-      
-        await subscription.save();
-        await User.findByIdAndUpdate(userId, {
-            $push: { subscriptions: subscription._id },
-        });
-        await Transaction.findOneAndUpdate(
-            { orderId: order.id },
-            { $set: { status: order.status} }
-        );
 
-    
-        res.status(200).json({ message: 'Payment verified and subscription updated successfully' });
+        const userId = order.notes.userId;
+        const itemId = order.notes.itemId;
+        const type = order.notes.type;
+
+        if (!userId || !itemId || !type) {
+            return res.status(400).json({ error: 'Invalid order notes. Missing userId, itemId, or type.' });
+        }
+
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        let item;
+
+        if (type === 'plan') {
+            item = await plans.findById(itemId);
+            if (!item) {
+                return res.status(404).json({ error: 'Plan not found' });
+            }
+
+            const subscription = new Subscription({
+                user: userId,
+                plan: itemId,
+                startTime: new Date(),
+                status: 'active',
+                paymentId: razorpay_payment_id,
+            });
+            await subscription.save();
+
+            user.subscriptions.push(subscription._id);
+            await user.save();
+
+            await Transaction.findOneAndUpdate(
+                { orderId: order.id },
+                { $set: { status: order.status } }
+            );
+
+            return res.status(200).json({ message: 'Plan subscribed successfully.', subscription });
+        } else if (type === 'course') {
+            item = await Course.findById(itemId);
+            if (!item) {
+                return res.status(404).json({ error: 'Course not found' });
+            }
+
+            if (user.purchasedCourses.includes(itemId)) {
+                return res.status(400).json({ message: 'Course already purchased.' });
+            }
+
+            user.purchasedCourses.push(itemId);
+            await user.save();
+
+            await Transaction.findOneAndUpdate(
+                { orderId: order.id },
+                { $set: { status: order.status } }
+            );
+
+            return res.status(200).json({ message: 'Course purchased successfully.', course: item });
+        } else {
+            return res.status(400).json({ error: 'Invalid type provided. Must be either "plan" or "course".' });
+        }
     } catch (error) {
         console.error('Error verifying payment:', error);
-        res.status(500).json({ error: 'Server error' });
+        res.status(500).json({ error: 'Server error', details: error.message });
     }
 });
+
 router.post('/webhook', async (req, res) => {
     const {order_id, payment_id} = req.body;  
     const webhookSecret = 'amar2002'; // Set this in Razorpay dashboard
