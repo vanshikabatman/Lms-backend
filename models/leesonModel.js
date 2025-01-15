@@ -17,6 +17,7 @@ const LessonSchema = new mongoose.Schema({
     ],
     duration: { type: Number }, // For videos or time-limited tests
     preview: { type: String }, // Preview content if applicable
+    isDownloadable : {type:Boolean, default:false},
     courseId: { type: mongoose.Schema.Types.ObjectId, ref: 'Course', required: true },
   }, { timestamps: true });
 

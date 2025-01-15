@@ -71,7 +71,7 @@ router.get("/one/:courseId" ,authenticate,  async (req,res)=>{
 try{
   const userId = req.user._id;
   const courseId = req.params.courseId;  
-  const course = await Course.findById(courseId).populate('lessons', 'title preview content').populate('teacher', 'name');
+  const course = await Course.findById(courseId).populate('lessons').populate('teacher', 'name');
     if (!course ) {
       return res.status(404).json({ message: 'Course not found or not published' });
     }
@@ -93,12 +93,8 @@ try{
       lessonsCount : course.lessonsCount,
       createdAt : course.createdAt,
       discountPercent: course.discountPercent,
-      
-
-
-
-      
       lessons: course.lessons.map((lesson) => ({
+        isPurchased : false,
         title: lesson.title,
         preview: lesson.preview || 'This content is locked.',
       })),
@@ -107,15 +103,19 @@ try{
 if (userId){
   const user = await User.findById(userId);
 
-      if (user && user.purchasedCourses.includes(courseId)) {
+      if ((user && user.purchasedCourses.includes(courseId))|| user.role ==="admin") {
         // Update response to include full lesson content
         response.isPurchased = true;
         response.lessons = course.lessons.map((lesson) => ({
+          id: lesson.id,
           title: lesson.title,
           content: lesson.content,
           type: lesson.type,
           duration: lesson.duration,
-          questions: lesson.questions,
+          questions: lesson.questions ?? [],
+          isPurchased : true
+          
+          
          
         }));
       }
