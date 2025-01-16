@@ -18,7 +18,7 @@ const userSchema = new mongoose.Schema({
   phone: String,
   courses : [{ type: mongoose.Schema.Types.ObjectId, ref: 'Course' }], // Courses created by the user
   college: String,
-  class: String,
+  preparingFor: String,
   state: String,
   purchasedCourses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Course' }], // Individual courses purchased
   subscriptions: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Subscription' }], // Reference to subscriptions

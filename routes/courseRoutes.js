@@ -6,7 +6,7 @@ const User = require('../models/user');
 const { authenticate, authorizeRole } = require('../middleware/auth');
 
 // Create a course (Admin or Instructor only)
-router.post('/create-course', async (req, res) => {
+router.post('/create-course', authenticate, authorizeRole(['instructor','admin']), async (req, res) => {
   try {
     const {
       title,
@@ -21,15 +21,15 @@ router.post('/create-course', async (req, res) => {
       link,
       duration,
       category,
-      teacher,
       lessons,
       badges,
       translations,
       subscriptionIncluded,
+    
     } = req.body;
 
     // Validate required fields
-    if (!title || !description || !type || !duration || !image || !thumbnail || !teacher) {
+    if (!title || !description || !type || !duration || !image || !thumbnail) {
       return res.status(400).json({ error: 'Required fields are missing.' });
     }
 
@@ -47,13 +47,13 @@ router.post('/create-course', async (req, res) => {
       link,
       duration,
       category,
-      teacher,
+      teacher : req.user.id,
       lessons,
       badges,
       translations,
       subscriptionIncluded,
     });
-
+    await User.findByIdAndUpdate(course.teacher, { $push: { courses: course._id } });
     // Save the course to the database
     await course.save();
 

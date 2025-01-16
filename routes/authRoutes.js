@@ -12,7 +12,7 @@ router.post('/register', async (req, res) => {
   const { username, email, password } = req.body;
 
   try {
-  
+
     if (!email || !password || !username) {
       return res.status(400).json({ message: 'All fields are required' });
     }
@@ -28,10 +28,10 @@ router.post('/register', async (req, res) => {
       name: username,
       email: email,
       password: hashedPassword,
-      role: 'student' 
+      role: 'student'
     });
 
-   
+
     await user.save();
     res.status(201).json({ message: 'User created successfully' });
   } catch (err) {
@@ -40,9 +40,9 @@ router.post('/register', async (req, res) => {
 });
 
 
-router.post('/register-instructor', authenticate,authorizeRole(['admin']), async (req, res) => {
- const { name, email, password, biography, avatar, phone, state } = req.body;
- 
+router.post('/register-instructor', authenticate, authorizeRole(['admin']), async (req, res) => {
+  const { name, email, password, biography, avatar, phone, state } = req.body;
+
   try {
     if (!email || !password || !name) {
       return res.status(400).json({ message: 'All fields are required' });
@@ -59,14 +59,14 @@ router.post('/register-instructor', authenticate,authorizeRole(['admin']), async
       password: hashedPassword,
       role: 'instructor',
       biography: biography,
-      avatar : avatar,
-      phone : phone,
-      state : state
+      avatar: avatar,
+      phone: phone,
+      state: state
     });
     await user.save();
     res.status(201).json({ message: 'User created successfully' });
-}
-catch (err) {
+  }
+  catch (err) {
     res.status(500).json({ message: 'Error registering user', error: err.message });
   }
 }
@@ -76,7 +76,7 @@ catch (err) {
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
   try {
-    const user = await User.findOne({ email }).populate([{ path: "subscriptions", populate: { path: "plan" }}, {path: "purchasedCourses"}]);
+    const user = await User.findOne({ email }).populate([{ path: "subscriptions", populate: { path: "plan" } }, { path: "purchasedCourses" }]);
     if (!user) {
 
       return res.status(400).json({ message: 'Invalid credentials' });
@@ -217,17 +217,46 @@ router.get('/get-user/:id', async (req, res) => {
   }
 });
 
-router.put('/update-user/:id', authenticate , async (req, res) => {
-  const { id } = req.params;
-  const { name, email } = req.body;
+// router.put('/update-user/:id', authenticate , async (req, res) => {
+//   const { id } = req.params;
+//   const { name, email , phone,college , preparingFor , state } = req.body;
+
+//   try {
+//     if( id !== req.user.id || req.user.role !== 'admin') {
+//       return res.status(403).json({ message: 'You are not authorized to update this user.' });
+//     }
+
+//     const user = await User.findById(id);}
+
+//     catch (err) {}
+//   });
+
+router.post('/create-profile', authenticate, async (req, res) => {
+  const { college, preparingFor, state, avatar, phone } = req.body;
 
   try {
-    if( id !== req.user.id || req.user.role !== 'admin') {
-      return res.status(403).json({ message: 'You are not authorized to update this user.' });
+    // Validate request body
+    if (!college || !preparingFor || !state || !avatar || !phone) {
+      return res.status(400).json({ message: 'All fields are required' });
     }
 
-    const user = await User.findById(id);}
-    
-    catch (err) {}
-  });
+    // Update user profile directly
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      { college : college, preparingFor : preparingFor, state : state, avatar : avatar, phone:phone },  // Fields to update
+      { new: true, runValidators: true } // Options: return updated user & validate fields
+    );
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found.' });
+    }
+
+    res.status(200).json({ message: 'Profile updated successfully', user });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
 module.exports = router;
