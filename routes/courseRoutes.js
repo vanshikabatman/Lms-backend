@@ -221,7 +221,7 @@ router.delete('/:courseId', authenticate, authorizeRole(['admin', 'instructor'])
       return res.status(403).json({ message: 'You are not authorized to delete this course' });
     }
 
-    await course.remove();
+    await course.findByIdAndDelete(courseId);
     res.status(200).json({ message: 'Course deleted successfully' });
   } catch (err) {
     res.status(400).json({ message: 'Failed to delete course', error: err.message });
