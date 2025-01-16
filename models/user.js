@@ -13,6 +13,7 @@ const userSchema = new mongoose.Schema({
       enum: ['student', 'admin', 'instructor'], 
       default: 'student' 
   },
+  profileCreated : { type: Boolean, default: false },
   biography : String,
   avatar: String,
   phone: String,

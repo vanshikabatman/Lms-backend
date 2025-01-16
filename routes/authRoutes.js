@@ -61,7 +61,8 @@ router.post('/register-instructor', authenticate, authorizeRole(['admin']), asyn
       biography: biography,
       avatar: avatar,
       phone: phone,
-      state: state
+      state: state,
+      profileCreated: true
     });
     await user.save();
     res.status(201).json({ message: 'User created successfully' });
@@ -243,7 +244,7 @@ router.post('/create-profile', authenticate, async (req, res) => {
     // Update user profile directly
     const user = await User.findByIdAndUpdate(
       req.user.id,
-      { college : college, preparingFor : preparingFor, state : state, avatar : avatar, phone:phone },  // Fields to update
+      { college : college, preparingFor : preparingFor, state : state, avatar : avatar, phone:phone , profileCreated : true},  // Fields to update
       { new: true, runValidators: true } // Options: return updated user & validate fields
     );
 
