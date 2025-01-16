@@ -13,6 +13,10 @@ const userSchema = new mongoose.Schema({
       enum: ['student', 'admin', 'instructor'], 
       default: 'student' 
   },
+  biography : String,
+  avatar: String,
+  phone: String,
+  courses : [{ type: mongoose.Schema.Types.ObjectId, ref: 'Course' }], // Courses created by the user
   college: String,
   class: String,
   state: String,

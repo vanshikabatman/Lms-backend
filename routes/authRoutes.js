@@ -6,10 +6,47 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const { authenticate, authorizeRole } = require('../middleware/auth');
+const path = require('path');
 
 router.post('/register', async (req, res) => {
-  const { username, email, password, role } = req.body;
+  const { username, email, password } = req.body;
+
   try {
+  
+    if (!email || !password || !username) {
+      return res.status(400).json({ message: 'All fields are required' });
+    }
+
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: 'Email already in use' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const user = new User({
+      name: username,
+      email: email,
+      password: hashedPassword,
+      role: 'student' 
+    });
+
+   
+    await user.save();
+    res.status(201).json({ message: 'User created successfully' });
+  } catch (err) {
+    res.status(500).json({ message: 'Error registering user', error: err.message });
+  }
+});
+
+
+router.post('/register-instructor', authenticate,authorizeRole(['admin']), async (req, res) => {
+ const { name, email, password, biography, avatar, phone, state } = req.body;
+ 
+  try {
+    if (!email || !password || !name) {
+      return res.status(400).json({ message: 'All fields are required' });
+    }
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: 'Email already in use' });
@@ -17,25 +54,31 @@ router.post('/register', async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = new User({
-      name: username,
+      name: name,
       email: email,
       password: hashedPassword,
-      role: role
+      role: 'instructor',
+      biography: biography,
+      avatar : avatar,
+      phone : phone,
+      state : state
     });
     await user.save();
     res.status(201).json({ message: 'User created successfully' });
-  } catch (err) {
-    res.status(400).json({ message: 'Error registering user', error: err.message });
+}
+catch (err) {
+    res.status(500).json({ message: 'Error registering user', error: err.message });
   }
-});
+}
+);
 
 // Login route
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
   try {
-    const user = await User.findOne({ email }).populate({ path: "subscriptions", populate: { path: "plan" } });
+    const user = await User.findOne({ email }).populate([{ path: "subscriptions", populate: { path: "plan" }}, {path: "purchasedCourses"}]);
     if (!user) {
-      console.log("balle balle");
+
       return res.status(400).json({ message: 'Invalid credentials' });
     }
     console.log(user.password);
@@ -46,7 +89,7 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET );
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET);
     res.status(200).json({
       token, user:
         user
@@ -108,7 +151,7 @@ router.post('/login-with-code', async (req, res) => {
 
 router.get('/admin/get-all-users', async (req, res) => {
   try {
-    const users = await User.find(); 
+    const users = await User.find();
     if (!users.length) {
       return res.status(404).json({ message: 'No users found.' });
     }
@@ -174,5 +217,17 @@ router.get('/get-user/:id', async (req, res) => {
   }
 });
 
+router.put('/update-user/:id', authenticate , async (req, res) => {
+  const { id } = req.params;
+  const { name, email } = req.body;
 
+  try {
+    if( id !== req.user.id || req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'You are not authorized to update this user.' });
+    }
+
+    const user = await User.findById(id);}
+    
+    catch (err) {}
+  });
 module.exports = router;
