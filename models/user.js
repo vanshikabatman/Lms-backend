@@ -21,6 +21,7 @@ const userSchema = new mongoose.Schema({
   college: String,
   preparingFor: String,
   state: String,
+  yearOfAdmission : Number,
   purchasedCourses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Course' }], // Individual courses purchased
   subscriptions: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Subscription' }], // Reference to subscriptions
   tempAccessCode: { 

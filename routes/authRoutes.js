@@ -234,18 +234,18 @@ router.get('/get-user/:id', async (req, res) => {
 //   });
 
 router.post('/create-profile', authenticate, async (req, res) => {
-  const { college, preparingFor, state, avatar, phone } = req.body;
+  const { college, preparingFor, state, avatar, phone , yearOfAdmission } = req.body;
 
   try {
     // Validate request body
-    if (!college || !preparingFor || !state || !avatar || !phone) {
+    if (!college || !preparingFor || !state || !yearOfAdmission ) {
       return res.status(400).json({ message: 'All fields are required' });
     }
 
     // Update user profile directly
     const user = await User.findByIdAndUpdate(
       req.user.id,
-      { college : college, preparingFor : preparingFor, state : state, avatar : avatar, phone:phone , profileCreated : true},  // Fields to update
+      { college : college, preparingFor : preparingFor, state : state, avatar : avatar ?? "", phone:phone ?? null , profileCreated : true, yearOfAdmission : yearOfAdmission},  // Fields to update
       { new: true, runValidators: true } // Options: return updated user & validate fields
     );
 
