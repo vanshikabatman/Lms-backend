@@ -254,7 +254,7 @@ router.get('/my-courses', authenticate, async (req, res) => {
     const user = await User.findById(req.user.id).populate('purchasedCourses');
     if (!user) return res.status(404).json({ message: 'User not found.' });
 
-    res.status(200).json(user.purchasedCourses);
+    res.status(200).json({courses : user.purchasedCourses});
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
