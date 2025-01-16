@@ -254,7 +254,20 @@ router.get('/my-courses', authenticate, async (req, res) => {
     const user = await User.findById(req.user.id).populate('purchasedCourses');
     if (!user) return res.status(404).json({ message: 'User not found.' });
 
-    res.status(200).json({courses : user.purchasedCourses});
+    res.status(200).json({courses : user.purchasedCourses.map((pcourse)=>{
+      return {
+        id : pcourse._id,
+        title : pcourse.title,
+        description : pcourse.description,
+        thumbnail : pcourse.thumbnail,
+        teacher : pcourse.teacher.name,
+        type : pcourse.type,
+        duration : pcourse.duration,
+        category : pcourse.category,
+        lessonsCount : pcourse.lessonsCount,
+        preview : pcourse.link,
+      }
+    })});
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
