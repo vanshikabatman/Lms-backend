@@ -16,6 +16,9 @@ const Subscription = require('./models/subscriptionModel');
 const submission = require('./models/submissionModel');
 const razor = require('./routes/razorPay');
 const lessonRoute = require('./routes/lessonRoutes');
+const collegeRoute = require('./routes/collegeRoute');
+const stateRoute = require('./routes/stateRoute');
+const categoryRoute = require('./routes/categoryRoute');
 
 dotenv.config();
 
@@ -37,5 +40,9 @@ app.use('/api/courses', courseRoutes);
 app.use('/api/plan',planRoutes );
 app.use('/api/razorpay', razor);
 app.use('/api/lessons', lessonRoute);
+app.use('/api/college', collegeRoute);
+app.use('/api/state', stateRoute);
+app.use('/api/category', categoryRoute);
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
