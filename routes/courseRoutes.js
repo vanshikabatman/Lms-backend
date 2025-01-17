@@ -4,6 +4,7 @@ const router = express.Router();
 const Course = require('../models/course');
 const User = require('../models/user');
 const { authenticate, authorizeRole } = require('../middleware/auth');
+const FeauredCourseModel = require('../models/featuredCourse');
 
 // Create a course (Admin or Instructor only)
 router.post('/create-course', authenticate, authorizeRole(['instructor','admin']), async (req, res) => {
@@ -266,11 +267,75 @@ router.get('/my-courses', authenticate, async (req, res) => {
         category : pcourse.category,
         lessonsCount : pcourse.lessonsCount,
         preview : pcourse.link,
+        rate : pcourse.rating,
+        price : pcourse.price,
       }
     })});
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
 });
+router.get('/top-new-courses', async (req, res) => {
+  try {
+    const topNewCourses = await Course.find().sort({ createdAt: -1 }).limit(5);
+    res.status(200).json(topNewCourses);
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to fetch top new courses', error: err.message });
+  }
+});
+router.get('/get-featured-courses', async (req, res) => {
+try{
+  const FeaturedCourse = await FeauredCourseModel.find().populate('courseId');
+  res.status(200).json(FeaturedCourse);
+}
+catch (err) {
+  res.status(500).json({ message: 'Failed to fetch featured courses', error: err.message });
+}
+
+});
+router.post('/add-featured-course', authenticate, authorizeRole(['admin']), async (req, res) => {
+  const { courseId } = req.body;
+
+  if (!courseId) {
+    return res.status(400).json({ message: 'Course ID is required' });
+  }
+
+  try {
+    const course = await Course.findById(courseId);
+    if (!course) {
+      return res.status(404).json({ message: 'Course not found' });
+    }
+
+    const featuredCourse = new FeauredCourseModel({ courseId });
+    await featuredCourse.save();
+
+    res.status(200).json({ message: 'Course added as featured successfully', featuredCourse });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to add featured course', error: err.message });
+  }
+});
+router.delete('/remove-featured-course', authenticate, authorizeRole(['admin']), async (req, res) => {
+  const { courseId } = req.body;
+
+  if (!courseId) {
+    return res.status(400).json({ message: 'Course ID is required' });
+  }
+
+  try {
+    const featuredCourse = await FeauredCourseModel.findOneAndDelete({ courseId });
+    if (!featuredCourse) {
+      return res.status(404).json({ message: 'Featured course not found' });
+    }
+
+    res.status(200).json({ message: 'Course removed from featured successfully' });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to add featured course', error: err.message });
+  }
+});
+
+
+
+
+
 
 module.exports = router;
