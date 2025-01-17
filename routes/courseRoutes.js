@@ -286,7 +286,9 @@ router.get('/top-new-courses', async (req, res) => {
 router.get('/get-featured-courses', async (req, res) => {
 try{
   const FeaturedCourse = await FeauredCourseModel.find().populate('courseId');
-  res.status(200).json(FeaturedCourse);
+  res.status(200).json({
+    Featured : FeaturedCourse.map((course)=>course.courseId),
+  });
 }
 catch (err) {
   res.status(500).json({ message: 'Failed to fetch featured courses', error: err.message });
