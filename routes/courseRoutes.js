@@ -285,7 +285,7 @@ router.get('/top-new-courses', async (req, res) => {
 });
 router.get('/get-featured-courses', async (req, res) => {
 try{
-  const FeaturedCourse = await FeauredCourseModel.find().populate('courseId');
+  const FeaturedCourse = await FeauredCourseModel.find().populate({path: 'courseId' , populate : {path : 'teacher', select : 'name'}}).exec();
   res.status(200).json({
     Featured : FeaturedCourse.map((course)=>course.courseId),
   });

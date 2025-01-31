@@ -53,7 +53,7 @@ router.post(
 );
 
 // GET: Retrieve all subscription plans
-router.get('/', authenticate, async (req, res) => {
+router.get('/', async (req, res) => {
     try {
         const plans = await Plan.find({})
             .populate('includedCourses') // Populate specific fields from related courses
