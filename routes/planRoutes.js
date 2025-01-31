@@ -13,9 +13,9 @@ const validatePlan = (req, res, next) => {
         return res.status(400).json({ error: 'Missing required fields: name, price, and duration are required.' });
     }
 
-    if (!['Basic', 'Premium', 'Focused'].includes(name)) {
-        return res.status(400).json({ error: 'Invalid plan name. Must be one of: Basic, Premium, Focused.' });
-    }
+    // if (!['Basic', 'Premium', 'Focused'].includes(name)) {
+    //     return res.status(400).json({ error: 'Invalid plan name. Must be one of: Basic, Premium, Focused.' });
+    // }
 
     next();
 };

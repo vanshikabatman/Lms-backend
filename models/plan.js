@@ -1,12 +1,47 @@
 const mongoose = require('mongoose');
-
 const PlanSchema = new mongoose.Schema({
-    name: { type: String, enum : ['Basic' , 'Premium' , 'Focused'], required: true }, // e.g., "Basic", "Premium"
-    duration: { type: Number, required: true }, // Duration in months
-    price: { type: Number, required: true }, // Price of the plan
-    includedCourses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Course' }], // Courses included in the plan
-    description: { type: String }, // Optional description of the plan
-    isActive: { type: Boolean, default: true }, // Indicates if the plan is currently active
+    name: { 
+        type: String, 
+        // enum: ['Basic', 'Premium', 'Focused'], 
+        required: true 
+    }, // e.g., "Basic", "Premium"
+
+    duration: { 
+        type: Number, 
+        required: true, 
+        min: 1 
+    }, // Duration in months (ensuring it's at least 1)
+
+    price: { 
+        type: Number, 
+        required: true, 
+        min: 0 
+    }, // Ensuring price is non-negative
+
+    includedCourses: [{ 
+        type: mongoose.Schema.Types.ObjectId, 
+        ref: 'Course' 
+    }], // Courses included in the plan
+
+    description: { 
+        type: String, 
+        trim: true 
+    }, // Optional description with trimming
+
+    isActive: { 
+        type: Boolean, 
+        default: true, 
+        index: true 
+    }, // Indexed for faster lookups
+
+    validity: { 
+        type: Number, 
+        default: 30, 
+        min: 1 
+    } // Number of days the plan is valid
+
 }, { timestamps: true });
+
+
 
 module.exports = mongoose.model('Plan', PlanSchema);
