@@ -7,9 +7,9 @@ const Plan = require("../models/plan")
 
 // Middleware for validating request body
 const validatePlan = (req, res, next) => {
-    const { name, price, duration, description } = req.body;
+    const { name, price, duration, validity } = req.body;
 
-    if (!name || !price || !duration) {
+    if (!name || !price || !duration || !validity) {
         return res.status(400).json({ error: 'Missing required fields: name, price, and duration are required.' });
     }
 
@@ -27,14 +27,17 @@ router.post(
     authorizeRole(['admin']),
     validatePlan,
     async (req, res) => {
-        const { name, price, duration, description } = req.body;
+        const { name, price, duration, description , thumbnail  , validity} = req.body;
 
         try {
             const plan = new Plan({
-                name,
-                price,
-                duration,
-                description,
+               name: name,
+               thumbnail: thumbnail,
+                price: price,
+                duration :duration,
+                description: description,
+                validity: validity,
+
             });
 
             await plan.save();

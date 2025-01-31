@@ -5,7 +5,11 @@ const PlanSchema = new mongoose.Schema({
         // enum: ['Basic', 'Premium', 'Focused'], 
         required: true 
     }, // e.g., "Basic", "Premium"
-
+    thumbnail : {
+        type: String,
+        required: true,
+        default: "https://via.placeholder.com/150"
+    },
     duration: { 
         type: Number, 
         required: true, 
