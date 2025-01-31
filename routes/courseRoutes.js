@@ -2,12 +2,14 @@
 const express = require('express');
 const router = express.Router();
 const Course = require('../models/course');
+const Topic = require('../models/topicModel');
+const Lesson = require('../models/leesonModel');
 const User = require('../models/user');
 const { authenticate, authorizeRole } = require('../middleware/auth');
 const FeauredCourseModel = require('../models/featuredCourse');
 
 // Create a course (Admin or Instructor only)
-router.post('/create-course', authenticate, authorizeRole(['instructor','admin']), async (req, res) => {
+router.post('/create-course', authenticate, authorizeRole(['instructor', 'admin']), async (req, res) => {
   try {
     const {
       title,
@@ -22,11 +24,10 @@ router.post('/create-course', authenticate, authorizeRole(['instructor','admin']
       link,
       duration,
       category,
-      lessons,
+      topics, // Now storing topics separately
       badges,
       translations,
       subscriptionIncluded,
-    
     } = req.body;
 
     // Validate required fields
@@ -34,11 +35,55 @@ router.post('/create-course', authenticate, authorizeRole(['instructor','admin']
       return res.status(400).json({ error: 'Required fields are missing.' });
     }
 
-    // Create a new course
+    // Ensure price is handled correctly
+    const finalPrice = isFree ? 0 : price;
+
+    let topicIds = [];
+    let totalLessonsCount = 0;
+
+    // Create Topics & Lessons
+    for (const topicData of topics) {
+      if (!topicData.title || !Array.isArray(topicData.lessons) || topicData.lessons.length === 0) {
+        return res.status(400).json({ error: `Topic "${topicData.title}" must contain lessons.` });
+      }
+
+      // Create Topic
+      const newTopic = new Topic({
+        title: topicData.title,
+        totalDuration: topicData.totalDuration || "0",
+        totalLesson: topicData.lessons.length,
+        lessons: [],
+      });
+
+      await newTopic.save();
+
+      let lessonIds = [];
+      for (const lessonData of topicData.lessons) {
+        const newLesson = new Lesson({
+          title: lessonData.title,
+          lessonUrl: lessonData.lessonUrl,
+          duration: lessonData.duration,
+          isComplete: lessonData.isComplete || false,
+          topicId: newTopic._id, // Reference to Topic
+        });
+
+        await newLesson.save();
+        lessonIds.push(newLesson._id);
+      }
+
+      // Update Topic with lesson IDs
+      newTopic.lessons = lessonIds;
+      await newTopic.save();
+
+      topicIds.push(newTopic._id);
+      totalLessonsCount += topicData.lessons.length;
+    }
+
+    // Create Course
     const course = new Course({
       title,
       description,
-      price: isFree ? 0 : price, // Ensure price is 0 for free courses
+      price: finalPrice,
       isFree,
       priceWithDiscount,
       discountPercent,
@@ -48,25 +93,30 @@ router.post('/create-course', authenticate, authorizeRole(['instructor','admin']
       link,
       duration,
       category,
-      teacher : req.user.id,
-      lessons,
+      teacher: req.user.id,
+      topics: topicIds, // Store topic ObjectIds
+      lessonsCount: totalLessonsCount,
       badges,
       translations,
       subscriptionIncluded,
     });
-    await User.findByIdAndUpdate(course.teacher, { $push: { courses: course._id } });
-    // Save the course to the database
+
+    // Save course to database
     await course.save();
+
+    // Add course reference to the instructor
+    await User.findByIdAndUpdate(req.user.id, { $push: { courses: course._id } });
 
     res.status(201).json({
       message: 'Course created successfully.',
       course,
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Something went wrong.' });
+    console.error("Error creating course:", error);
+    res.status(500).json({ error: 'Something went wrong.', details: error.message });
   }
 });
+
 
 router.get("/one/:courseId" ,authenticate,  async (req,res)=>{
 try{
@@ -132,7 +182,7 @@ catch (err){
 
 router.get('/all', async (req, res) => {
   try {
-    const courses = await Course.find().populate({path: 'teacher',select :'name email' }).exec();
+    const courses = await Course.find().populate({path: 'teacher',select :'name email'}).populate({ path: 'topics', select: 'title totalDuration' }).exec();
     res.status(200).json(courses);
   } catch (err) {
     res.status(400).json({ message: err.message });

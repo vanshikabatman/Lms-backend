@@ -4,8 +4,9 @@ const LessonSchema = new mongoose.Schema({
     title: { type: String, required: true },
     type: { 
       type: String, 
-      required: true, 
+       
       enum: ['video', 'quiz', 'test', 'document'], 
+      default: 'video'
     },
     content: { type: String }, 
     questions: [
@@ -18,7 +19,7 @@ const LessonSchema = new mongoose.Schema({
     duration: { type: Number }, // For videos or time-limited tests
     preview: { type: String }, // Preview content if applicable
     isDownloadable : {type:Boolean, default:false},
-    courseId: { type: mongoose.Schema.Types.ObjectId, ref: 'Course', required: true },
+    topicId: { type: mongoose.Schema.Types.ObjectId, ref: 'Topic', required: true },
   }, { timestamps: true });
 
   module.exports = mongoose.model('Lesson', LessonSchema);
