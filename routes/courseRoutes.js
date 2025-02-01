@@ -118,20 +118,33 @@ router.post('/create-course', authenticate, authorizeRole(['instructor', 'admin'
 });
 
 
-router.get("/one/:courseId" ,authenticate,  async (req,res)=>{
-try{
-  const userId = req.user._id;
-  const courseId = req.params.courseId;  
-  const course = await Course.findById(courseId).populate('lessons').populate('teacher', 'name');
-    if (!course ) {
-      return res.status(404).json({ message: 'Course not found or not published' });
+router.get("/one/:courseId", authenticate, async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const courseId = req.params.courseId;
+
+    // Populate topics and their lessons along with the teacher
+    const course = await Course.findById(courseId)
+      .populate({
+        path: "topics",
+        populate: {
+          path: "lessons",
+          select: "title preview content type duration questions", // Only necessary fields
+        },
+      })
+      .populate("teacher", "name")
+      .exec();
+
+    if (!course) {
+      return res.status(404).json({ message: "Course not found or not published" });
     }
+
     let response = {
-     id : course._id,
+      id: course._id,
       title: course.title,
       description: course.description,
-      price: course.price,  
-      teacher: course.teacher ? course.teacher.name : 'Unknown',
+      price: course.price,
+      teacher: course.teacher ? course.teacher.name : "Unknown",
       isPurchased: false,
       preview: course.link ?? "Not available",
       thumbnail: course.thumbnail,
@@ -139,46 +152,55 @@ try{
       duration: course.duration,
       category: course.category ?? "Course",
       status: course.status,
-      rating : course.rating,
-      studentsCount : course.studentsCount,
-      lessonsCount : course.lessonsCount,
-      createdAt : course.createdAt,
+      rating: course.rating,
+      studentsCount: course.studentsCount,
+      lessonsCount: course.lessonsCount,
+      createdAt: course.createdAt,
       discountPercent: course.discountPercent,
-      lessons: course.lessons.map((lesson) => ({
-        isPurchased : false,
-        title: lesson.title,
-        preview: lesson.preview || 'This content is locked.',
-      })),
-      
-    };
-if (userId){
-  const user = await User.findById(userId);
 
-      if ((user && user.purchasedCourses.includes(courseId))|| user.role ==="admin") {
-        // Update response to include full lesson content
-        response.isPurchased = true;
-        response.lessons = course.lessons.map((lesson) => ({
-          id: lesson.id,
+      // Structure topics with lessons
+      topics: course.topics.map((topic) => ({
+        id: topic._id,
+        title: topic.title,
+        totalDuration: topic.totalDuration,
+        lessons: topic.lessons.map((lesson) => ({
+          isPurchased: false,
           title: lesson.title,
-          content: lesson.content,
-          type: lesson.type,
-          duration: lesson.duration,
-          questions: lesson.questions ?? [],
-          isPurchased : true
-          
-          
-         
+          preview: lesson.preview || "This content is locked.",
+        })),
+      })),
+    };
+
+    // Check if the user has purchased the course or is an admin
+    if (userId) {
+      const user = await User.findById(userId);
+
+      if ((user && user.purchasedCourses.includes(courseId)) || user.role === "admin") {
+        response.isPurchased = true;
+        response.topics = course.topics.map((topic) => ({
+          id: topic._id,
+          title: topic.title,
+          totalDuration: topic.totalDuration,
+          lessons: topic.lessons.map((lesson) => ({
+            id: lesson._id,
+            title: lesson.title,
+            content: lesson.content ?? "",
+            type: lesson.type,
+            duration: lesson.duration,
+            questions: lesson.questions ?? [],
+            isPurchased: true,
+          })),
         }));
       }
-}
+    }
 
-    res.status(200).json(response); 
-}
-catch (err){
-  console.log(err);
-  res.status(500).json({message : "Internal Server Error"});
-}
+    res.status(200).json(response);
+  } catch (err) {
+    console.error("Error fetching course:", err);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
 });
+
 
 router.get('/all', async (req, res) => {
   try {
