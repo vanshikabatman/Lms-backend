@@ -157,7 +157,28 @@ router.post('/verify', authenticate, async (req, res) => {
             );
 
             return res.status(200).json({ message: 'Course purchased successfully.', course: item });
-        } else {
+        } else if (type === 'exam') {
+            item = await Exam.findById(itemId);
+            if (!item) {
+                return res.status(404).json({ error: 'ExamID not found' });
+            }
+
+            if (user.purchasedExams.includes(itemId)) {
+                return res.status(400).json({ message: 'Exam already purchased.' });
+            }
+
+            user.purchasedExams.push(itemId);
+            await user.save();
+
+            await Transaction.findOneAndUpdate(
+                { orderId: order.id },
+                { $set: { status: order.status } }
+            );
+
+            return res.status(200).json({ message: 'Course purchased successfully.', course: item });
+        } 
+        
+        else {
             return res.status(400).json({ error: 'Invalid type provided. Must be either "plan" or "course".' });
         }
     } catch (error) {
