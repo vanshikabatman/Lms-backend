@@ -24,6 +24,7 @@ const userSchema = new mongoose.Schema({
   yearOfAdmission : Number,
   purchasedCourses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Course' }], // Individual courses purchased
   subscriptions: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Subscription' }], // Reference to subscriptions
+  purchasedExams: [{ type: mongoose.Schema.Types.ObjectId, ref: "Exam" }],
   tempAccessCode: { 
       code: String, 
       expiresAt: Date 

@@ -166,6 +166,7 @@ router.get("/one/:courseId", authenticate, async (req, res) => {
         lessons: topic.lessons.map((lesson) => ({
           isPurchased: false,
           title: lesson.title,
+          type : lesson.type,
           preview: lesson.preview || "This content is locked.",
         })),
       })),
