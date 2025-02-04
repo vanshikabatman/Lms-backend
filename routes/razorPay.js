@@ -175,12 +175,7 @@ router.post('/verify', authenticate, async (req, res) => {
                 { $set: { status: order.status } }
             );
 
-            return res.status(200).json({ message: 'Course purchased successfully.', exam: {
-                _id: item._id,
-                name: item.name,
-                isPurchased: true
-                
-            } , type: 'exam'});
+            return res.status(200).json({ message: 'Course purchased successfully.', exam: item , type: 'exam'});
         } 
         
         else {
