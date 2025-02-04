@@ -78,7 +78,7 @@ router.post('/register-instructor', authenticate, authorizeRole(['admin']), asyn
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
   try {
-    const user = await User.findOne({ email }).populate([{ path: "subscriptions", populate: { path: "plan" } }, { path: "purchasedCourses" }, {path: "purchasedExams"}]);
+    const user = await User.findOne({ email }).populate([{ path: "subscriptions", populate: { path: "plan" } }, { path: "purchasedCourses" }, {path: "purchasedExams" , select: "title price , isPurchased , isFree"}]);
     if (!user) {
 
       return res.status(400).json({ message: 'Invalid credentials' });
