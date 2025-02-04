@@ -137,7 +137,7 @@ router.post('/verify', authenticate, async (req, res) => {
                 { $set: { status: order.status } }
             );
 
-            return res.status(200).json({ message: 'Plan subscribed successfully.', subscription });
+            return res.status(200).json({ message: 'Plan subscribed successfully.', subscription , type: 'plan'}); 
         } else if (type === 'course') {
             item = await Course.findById(itemId);
             if (!item) {
@@ -156,7 +156,7 @@ router.post('/verify', authenticate, async (req, res) => {
                 { $set: { status: order.status } }
             );
 
-            return res.status(200).json({ message: 'Course purchased successfully.', course: item });
+            return res.status(200).json({ message: 'Course purchased successfully.', course: item , type: 'course'});
         } else if (type === 'exam') {
             item = await Exam.findById(itemId);
             if (!item) {
@@ -175,7 +175,7 @@ router.post('/verify', authenticate, async (req, res) => {
                 { $set: { status: order.status } }
             );
 
-            return res.status(200).json({ message: 'Course purchased successfully.', course: item });
+            return res.status(200).json({ message: 'Course purchased successfully.', exam: item , type: 'exam'});
         } 
         
         else {
