@@ -7,33 +7,43 @@ const Course = require('../models/course');
 const Razorpay = require('razorpay');
 const Transaction = require("../models/transactionModel");
 const User = require("../models/user")
+const { Exam } = require("../models/examModel")
 const razorpay = new Razorpay({
     key_id: "rzp_test_Wm90I5h1isnZZk",
     key_secret: "oUAbzAdAHXFJp7nXQJ1p68YD",
 });
 
 router.post('/buy', authenticate, async (req, res) => {
-    const { Id , type  } = req.body;
-   
+    const { Id, type } = req.body;
+
     try {
         let item;
         let itemIdField;
         const user = await User.findById(req.user.id);
 
-        if(type === 'plan'){
-        item  = await plans.findById(Id);
-        if (!item) return res.status(404).json({ error: 'Subscription plan not found' });
-        itemIdField = 'planId';   
-    }
+        if (type === 'plan') {
+            item = await plans.findById(Id);
+            if (!item) return res.status(404).json({ error: 'Subscription plan not found' });
+            itemIdField = 'planId';
+        }
         else if (type === 'course') {
-           item = await Course.findById(Id);
+            item = await Course.findById(Id);
             if (!item) return res.status(404).json({ error: 'Course not found' });
-           
+
             if (user.purchasedCourses.includes(Id)) {
                 return res.status(400).json({ message: 'Course already purchased.' });
             }
             itemIdField = 'courseId';
-        }   else{
+        } else if (type === 'exam') {
+            item = await Exam.findById(Id);
+            if (!item) return res.status(404).json({ error: 'Exam not found' });
+
+            if (user.purchasedExams.includes(Id)) {
+                return res.status(400).json({ message: 'Course already purchased.' });
+            }
+        }
+
+        else {
             return res.status(400).json({ error: 'Invalid type provided. Must be either "plan" or "course".' });
         }
         // Create a Razorpay order
@@ -45,7 +55,7 @@ router.post('/buy', authenticate, async (req, res) => {
             currency: 'INR',
             receipt: `receipt_${Date.now()}`,
             notes: {
-                userId : req.user.id,
+                userId: req.user.id,
                 itemId: item.id,
                 type,
             }
@@ -157,7 +167,7 @@ router.post('/verify', authenticate, async (req, res) => {
 });
 
 router.post('/webhook', async (req, res) => {
-    const {order_id, payment_id} = req.body;  
+    const { order_id, payment_id } = req.body;
     const webhookSecret = 'amar2002'; // Set this in Razorpay dashboard
     const signature = req.headers['x-razorpay-signature'];
 
@@ -196,21 +206,21 @@ router.post('/webhook', async (req, res) => {
 
 router.get('/admin/transactions', authenticate, authorizeRole(['admin']), async (req, res) => {
     try {
-      // Fetch all transactions from the database
-      const transactions = await Transaction.find().populate('userId planId').sort({ timestamp: -1 });
-  
-      if (!transactions.length) {
-        return res.status(404).json({ message: 'No transactions found.' });
-      }
-  
-      res.status(200).json({
-        message: 'Transaction history fetched successfully.',
-        transactions,
-      });
+        // Fetch all transactions from the database
+        const transactions = await Transaction.find().populate('userId planId').sort({ timestamp: -1 });
+
+        if (!transactions.length) {
+            return res.status(404).json({ message: 'No transactions found.' });
+        }
+
+        res.status(200).json({
+            message: 'Transaction history fetched successfully.',
+            transactions,
+        });
     } catch (error) {
-      console.error('Error fetching transaction history:', error);
-      res.status(500).json({ error: 'Server error', details: error.message });
+        console.error('Error fetching transaction history:', error);
+        res.status(500).json({ error: 'Server error', details: error.message });
     }
-  });
-  
+});
+
 module.exports = router;
