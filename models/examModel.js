@@ -5,7 +5,10 @@ const ExamSchema = new mongoose.Schema({
     title: String,
     questions: [{ type: mongoose.Schema.Types.ObjectId, ref: "Question" }],
     isPurchased : { type: Boolean, default: false }, 
-    teacher : { type: mongoose.Schema.Types.ObjectId,  ref: 'User', required: true }  
+    teacher : { type: mongoose.Schema.Types.ObjectId,  ref: 'User', required: true }  ,
+    duration : { type: Number, required: true },
+    examTaken : { type: Boolean, default: false },
+
     
   });
   const ExamResultSchema = new mongoose.Schema({
