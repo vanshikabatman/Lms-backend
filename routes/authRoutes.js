@@ -123,7 +123,7 @@ router.post('/admin/generate-code', async (req, res) => {
 router.post('/login-with-code', async (req, res) => {
   const { email, code } = req.body;
   try {
-    const user = await User.findOne({ email }).populate('purchasedCourses');
+    const user = await User.findOne({ email }).populate([{ path: "subscriptions", populate: { path: "plan" } }, { path: "purchasedCourses" }, {path: "purchasedExams" , select: "title price , isPurchased , isFree"}]);
     if (!user) return res.status(404).json({ message: 'User not found.' });
 
     if (!user.tempAccessCode || user.tempAccessCode.code !== code || new Date() > user.tempAccessCode.expiresAt) {
@@ -138,12 +138,7 @@ router.post('/login-with-code', async (req, res) => {
 
     res.status(200).json({
       token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        purchasedCourses: user.purchasedCourses
-      }
+      user: user
     });
   } catch (err) {
     res.status(400).json({ message: err.message });
