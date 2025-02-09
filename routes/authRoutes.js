@@ -130,8 +130,7 @@ router.post('/login-with-code', async (req, res) => {
       return res.status(400).json({ message: 'Invalid or expired access code.' });
     }
 
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET || 'defaultSecretKey', { expiresIn: '1h' });
-
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET);
     // Clear the temp access code after use
     user.tempAccessCode = null;
     await user.save();
