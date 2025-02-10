@@ -8,6 +8,11 @@ const crypto = require('crypto');
 const { authenticate, authorizeRole } = require('../middleware/auth');
 const path = require('path');
 const {sendEmail} = require('./mailer');
+const College = require('../models/collegeModel');
+const Category = require('../models/categoryModel');
+
+
+
 
 router.post('/register', async (req, res) => {
   const { username, email, password } = req.body;
@@ -257,5 +262,7 @@ router.post('/create-profile', authenticate, async (req, res) => {
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 });
+
+
 
 module.exports = router;

@@ -20,6 +20,7 @@ const collegeRoute = require('./routes/collegeRoute');
 const stateRoute = require('./routes/stateRoute');
 const categoryRoute = require('./routes/categoryRoute');
 const examRoute = require('./routes/examRoutes');
+const profileRoute = require('./routes/profileRoute');
 
 dotenv.config();
 
@@ -48,6 +49,7 @@ app.use('/api/state', stateRoute);
 app.use('/api/category', categoryRoute);
 app.use('/api/exam/',examRoute );
 app.use('/api/email', emailrouter);
+app.use('/api/profile' , profileRoute );
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
