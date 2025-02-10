@@ -7,6 +7,7 @@ const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const { authenticate, authorizeRole } = require('../middleware/auth');
 const path = require('path');
+const {sendEmail} = require('./mailer');
 
 router.post('/register', async (req, res) => {
   const { username, email, password } = req.body;
@@ -113,7 +114,9 @@ router.post('/admin/generate-code', async (req, res) => {
 
     user.tempAccessCode = { code: tempCode, expiresAt };
     await user.save();
-
+    sendEmail(email, "LMS APP Access Code ", `Your Temporary access code: ${tempCode}`, `<p>Your access code: <strong>${tempCode}</strong></p>`)
+      .then(() => console.log(`✅ Email sent to ${email}`))
+      .catch(err => console.error(`❌ Failed to send email: ${err.message}`));
     res.status(200).json({ message: 'Temporary access code generated.', code: tempCode });
   } catch (err) {
     res.status(400).json({ message: err.message });

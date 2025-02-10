@@ -12,7 +12,7 @@ const courseRoutes = require('./routes/courseRoutes');
 const planRoutes = require('./routes/planRoutes');
 const Transaction = require('./models/transactionModel');
 const Subscription = require('./models/subscriptionModel');
-
+const {emailrouter} = require('./routes/mailer');
 const submission = require('./models/submissionModel');
 const razor = require('./routes/razorPay');
 const lessonRoute = require('./routes/lessonRoutes');
@@ -47,6 +47,7 @@ app.use('/api/college', collegeRoute);
 app.use('/api/state', stateRoute);
 app.use('/api/category', categoryRoute);
 app.use('/api/exam/',examRoute );
+app.use('/api/email', emailrouter);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
