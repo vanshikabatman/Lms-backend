@@ -50,9 +50,11 @@ router.post('/buy', authenticate, async (req, res) => {
         if (type !== 'plan' && item.isFree === true) {
             if (type === 'course') {
                 user.purchasedCourses.push(Id);
+                await user.save();
             }
             if (type === 'exam') {
                 user.purchasedExams.push(Id);
+                await user.save();
             }
             return res.status(200).json({ message: 'Enrolled Successfully' , 
             isFree: true,
