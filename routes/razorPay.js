@@ -55,8 +55,10 @@ router.post('/buy', authenticate, async (req, res) => {
                 user.purchasedExams.push(Id);
             }
             return res.status(200).json({ message: 'Enrolled Successfully' , 
+            isFree: true,
             type: type === 'course' ? 'course' : 'exam',
-            [itemIdField] : item.id
+            [itemIdField] : item.id,
+            [type] : item
             });
             
         }
@@ -83,7 +85,8 @@ router.post('/buy', authenticate, async (req, res) => {
         });
         await transaction.save();
 
-        res.status(201).json({
+        res.status(200).json({
+            isFree: false,
             order
         });
     } catch (error) {
