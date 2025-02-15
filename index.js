@@ -26,9 +26,9 @@ dotenv.config();
 
 // Initialize the app
 const app = express();
-app.use(cors({ origin: "*", credentials: true }));
+
 app.use(cors({
-  origin: 'https://lms.bharatchains.com',  // Allow only this domain
+  origin: ["https://lms.bharatchains.com", "https://lmsapp.bharatchains.com" , "*"],   // Allow only this domain
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
