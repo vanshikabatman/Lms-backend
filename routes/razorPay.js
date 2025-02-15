@@ -26,7 +26,7 @@ router.post('/buy', authenticate, async (req, res) => {
             if (!item) return res.status(404).json({ error: 'Subscription plan not found' });
             itemIdField = 'planId';
         }
-        else if (type === 'course') {
+          else if (type === 'course') {
             item = await Course.findById(Id);
             if (!item) return res.status(404).json({ error: 'Course not found' });
 
@@ -46,9 +46,21 @@ router.post('/buy', authenticate, async (req, res) => {
         else {
             return res.status(400).json({ error: 'Invalid type provided. Must be either "plan" or "course".' });
         }
-        // Create a Razorpay order
-        console.log(item.price);
-        const amountInPaise = Math.round(item.price * 100); // Razorpay uses paise
+
+        if (type !== 'plan' && item.isFree === true) {
+            if (type === 'course') {
+                user.purchasedCourses.push(Id);
+            }
+            if (type === 'exam') {
+                user.purchasedExams.push(Id);
+            }
+            return res.status(200).json({ message: 'Enrolled Successfully' , 
+            type: type === 'course' ? 'course' : 'exam',
+            [itemIdField] : item.id
+            });
+            
+        }
+       const amountInPaise = Math.round(item.price * 100); // Razorpay uses paise
         console.log(amountInPaise);
         const order = await razorpay.orders.create({
             amount: amountInPaise,
@@ -71,7 +83,7 @@ router.post('/buy', authenticate, async (req, res) => {
         });
         await transaction.save();
 
-        res.status(200).json({
+        res.status(201).json({
             order
         });
     } catch (error) {
