@@ -61,7 +61,7 @@ router.post('/create-course', authenticate, authorizeRole(['instructor', 'admin'
       for (const lessonData of topicData.lessons) {
         const newLesson = new Lesson({
           title: lessonData.title,
-          lessonUrl: lessonData.lessonUrl,
+          content: lessonData.lessonUrl,
           duration: lessonData.duration,
           isComplete: lessonData.isComplete || false,
           topicId: newTopic._id, // Reference to Topic
