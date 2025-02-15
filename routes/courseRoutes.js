@@ -61,7 +61,7 @@ router.post('/create-course', authenticate, authorizeRole(['instructor', 'admin'
       for (const lessonData of topicData.lessons) {
         const newLesson = new Lesson({
           title: lessonData.title,
-          content: lessonData.lessonUrl,
+          content: lessonData.content,
           duration: lessonData.duration,
           isComplete: lessonData.isComplete || false,
           topicId: newTopic._id, // Reference to Topic
@@ -110,6 +110,18 @@ router.post('/create-course', authenticate, authorizeRole(['instructor', 'admin'
     res.status(201).json({
       message: 'Course created successfully.',
       course,
+      lessonData: {
+        topics: topics.map((topic, index) => ({
+          title: topic.title,
+          totalDuration: topic.totalDuration,
+          lessons: topic.lessons.map((lesson, index) => ({
+            title: lesson.title,
+            content: lesson.content,
+            duration: lesson.duration,
+            isComplete: lesson.isComplete,
+          })),
+        })),
+      }
     });
   } catch (error) {
     console.error("Error creating course:", error);
